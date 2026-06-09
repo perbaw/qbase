@@ -1,29 +1,34 @@
-name: Publish Quarto
+name: Deploy Quarto Blog
 
 on:
   push:
-    branches:
-      - main
-
-permissions:
-  contents: write
+    branches: [ main ]  # Runs whenever you push code changes to your main branch
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write   # Necessary to allow pushing the generated site to gh-pages branch
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      - uses: quarto-dev/quarto-actions/setup@v2
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          # cache: 'pip' # Speeds up subsequent workflow builds
 
-      - name: Render
-        run: quarto render
+      - name: Install Python Dependencies
+        run: |
+          pip install jupyter numpy matplotlib scipy statsmodels pandas
 
-      - name: Publish
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render and Publish to GitHub Pages
         uses: quarto-dev/quarto-actions/publish@v2
         with:
           target: gh-pages
